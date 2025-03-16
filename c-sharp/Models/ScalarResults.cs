@@ -51,12 +51,23 @@ namespace HmxLabs.TechTest.Models
 
         public IEnumerator<ScalarResult> GetEnumerator()
         {
-            throw new System.NotImplementedException();
+            foreach (var tradeId in _results.Keys)
+            {
+                yield return this[tradeId]!;
+            }
+
+            foreach (var tradeId in _errors.Keys)
+            {
+                if (!_results.ContainsKey(tradeId))
+                {
+                    yield return this[tradeId]!;
+                }
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            throw new System.NotImplementedException();
+            return GetEnumerator();
         }
 
         private readonly Dictionary<string, double> _results = new Dictionary<string, double>();
