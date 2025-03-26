@@ -2,24 +2,22 @@
 
 namespace HmxLabs.TechTest.Loaders
 {
-    public class BondTradeLoader : ITradeLoader
+    public class BondTradeLoader : AbstractTradeLoader
     {
-        private const char Seperator = ',';
+        private const char Separator = ',';
 
-        public IEnumerable<ITrade> LoadTrades()
+        public override IEnumerable<ITrade> LoadTrades()
         {
             var tradeList = new BondTradeList();
-            LoadTradesFromFile(DataFile, tradeList);
+            ProcessTradesStream(trade => tradeList.Add((BondTrade)trade));
 
             return tradeList;
         }
 
-        public string? DataFile { get; set; }
-
-        private BondTrade CreateTradeFromLine(string line_)
+        protected override ITrade CreateTradeFromLine(string line_)
         {
             
-            var items = line_.Split(new[] {Seperator});
+            var items = line_.Split(new[] {Separator});
             var trade = new BondTrade(items[6], items[0]);
             trade.TradeDate = DateTime.Parse(items[1]);
             trade.Instrument = items[2];
@@ -31,29 +29,10 @@ namespace HmxLabs.TechTest.Loaders
             return trade;
         }
 
-        private void LoadTradesFromFile(string? filename_, BondTradeList tradeList_)
+        protected override bool ShouldSkipLine(string? line, int lineCount)
         {
-            if (null == filename_)
-                throw new ArgumentNullException(nameof(filename_));
-            
-            var stream = new StreamReader(filename_);
-
-            using (stream)
-            {
-                var lineCount = 0;
-                while (!stream.EndOfStream)
-                {
-                    if (0 == lineCount)
-                    {
-                        stream.ReadLine();
-                    }
-                    else
-                    {
-                        tradeList_.Add(CreateTradeFromLine(stream.ReadLine()!));    
-                    }
-                    lineCount++;
-                }
-            }
+            return string.IsNullOrEmpty(line) || 
+                   lineCount < 1;
         }
     }
 }

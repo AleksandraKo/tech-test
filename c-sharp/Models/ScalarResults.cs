@@ -51,17 +51,16 @@ namespace HmxLabs.TechTest.Models
 
         public IEnumerator<ScalarResult> GetEnumerator()
         {
-            foreach (var tradeId in _results.Keys)
-            {
-                yield return this[tradeId]!;
-            }
+            HashSet<string> allTradeIds = new(_results.Keys);
+            allTradeIds.UnionWith(_errors.Keys);
 
-            foreach (var tradeId in _errors.Keys)
+            foreach (var tradeId in allTradeIds)
             {
-                if (!_results.ContainsKey(tradeId))
-                {
-                    yield return this[tradeId]!;
-                }
+                _results.TryGetValue(tradeId, out double result);
+                _errors.TryGetValue(tradeId, out string? error);
+                yield return new ScalarResult(tradeId, 
+                    _results.ContainsKey(tradeId) ? result : null, 
+                    error);
             }
         }
 

@@ -13,17 +13,15 @@ namespace HmxLabs.TechTest.RiskSystem
 
             var configs = new PricingEngineConfig();
             var doc = XDocument.Load(ConfigFile);
-            foreach (var engine in doc.Descendants("Engine"))
-            {
-                var configItem = new PricingEngineConfigItem
+            var configItems = doc.Descendants("Engine")
+                .Select(engine => new PricingEngineConfigItem
                 {
                     TradeType = engine.Attribute("tradeType")?.Value,
                     Assembly = engine.Attribute("assembly")?.Value,
                     TypeName = engine.Attribute("pricingEngine")?.Value
-                };
-
-                configs.Add(configItem);
-            }
+                });
+            
+            configItems.ToList().ForEach(configs.Add);
 
             return configs;
         }

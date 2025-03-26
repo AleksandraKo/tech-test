@@ -2,23 +2,22 @@
 
 namespace HmxLabs.TechTest.Loaders
 {
-    public class FxTradeLoader : ITradeLoader
+    public class FxTradeLoader : AbstractTradeLoader
     {
-        private const char Seperator = '¬';
+        private const char Separator = '¬';
         
-        public IEnumerable<ITrade> LoadTrades()
+        public override IEnumerable<ITrade> LoadTrades()
         {
             var tradeList = new FxTradeList();
-            LoadTradesFromFile(DataFile, tradeList);
+            
+            ProcessTradesStream(trade => tradeList.Add((FxTrade)trade));
+            
             return tradeList;
         }
-
-        public string? DataFile { get; set; }
-
-        private FxTrade CreateTradeFromLine(string line_)
+        
+        protected override ITrade CreateTradeFromLine(string line)
         {
-            
-            var items = line_.Split(new[] {Seperator});
+            var items = line.Split(new[] {Separator});
             var trade = new FxTrade(items[8], items[0], DateTime.Parse(items[6]));
             trade.TradeDate = DateTime.Parse(items[1]);
             trade.Instrument = items[2] + items[3];
@@ -28,32 +27,12 @@ namespace HmxLabs.TechTest.Loaders
             
             return trade;
         }
-
-        private void LoadTradesFromFile(string? filename_, FxTradeList tradeList_)
+        
+        protected override bool ShouldSkipLine(string? line, int lineCount)
         {
-            if (null == filename_)
-                throw new ArgumentNullException(nameof(filename_));
-            
-            var stream = new StreamReader(filename_);
-
-            using (stream)
-            {
-                var lineCount = 0;
-                while (!stream.EndOfStream)
-                {
-                    var line = stream.ReadLine();
-                    if (line == null)
-                        continue;
-
-                    if (line.StartsWith("END"))
-                        break;
-
-                    if (lineCount >= 2) {
-                        tradeList_.Add(CreateTradeFromLine(line));
-                    }
-                    lineCount++;
-                }
-            }
+            return string.IsNullOrEmpty(line) || 
+                   lineCount < 2 || 
+                   line.StartsWith("END");
         }
     }
 }
